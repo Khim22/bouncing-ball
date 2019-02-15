@@ -3,5 +3,5 @@
 ### Features
 
 - Free fall
-- Coefficient of restitution $$e = 0.9$$
+- Coefficient of restitution ![equation](https://latex.codecogs.com/gif.latex?e%3D0.9)
 - Bouncing off borders
