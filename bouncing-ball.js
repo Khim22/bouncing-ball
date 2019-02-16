@@ -22,6 +22,10 @@ class Ball{
     this.radius = radius;
     this.color = color
     this.e = e
+    this.a_y = 0
+    this.a_x = 0
+    this.v_y = 0
+    this.v_x = 1
   }
 
   drawBall(canvas,x=50, y=50){
@@ -49,9 +53,10 @@ class Ball{
   freeFall(canvas){
     this.x = 50;
     this.y = 50;
-    this.dy = 0;
-    this.dx = 1;
-    this.g = 0.0981; 
+    this.dy = this.v_y;
+    this.dx = this.v_x;
+    this.g = 0.0981;
+    this.a_y = this.g
     var count = 0
 
     setInterval(() => { 
@@ -63,16 +68,16 @@ class Ball{
               this.dy = -this.dy * this.e;
             count++
             console.log('bounce:' + count)
-            let bounce = document.getElementById("bounce")
-            bounce.innerHTML = count
+            // let bounce = document.getElementById("bounce")
+            // bounce.innerHTML = count
 
-              let y_elem = document.getElementById("y")
-              y_elem.innerHTML = this.y
-              let dy_elem = document.getElementById("dy")
-              dy_elem.innerHTML = this.dy
+            //   let y_elem = document.getElementById("y")
+            //   y_elem.innerHTML = this.y
+            //   let dy_elem = document.getElementById("dy")
+            //   dy_elem.innerHTML = this.dy
         } 
         else{
-          this.dy+= this.g;
+          this.dy+= this.a_y;
         }
   
         if(this.x >= canvas.width - this.radius || this.x < this.radius){
@@ -81,8 +86,10 @@ class Ball{
   
         this.y += this.dy;
         this.x += this.dx
+        this.v_y = this.dy * 0.2
         console.log('dy : ' +  this.dy)
         console.log('dx : ' +  this.dx)
+        console.log('cd: ' + this.dragCoefficient())
         this.drawBall(canvas, this.x , this.y);
       }
       else{
@@ -103,5 +110,15 @@ class Ball{
   isStoppedBouncing(dy,y, canvas){
     let cutoff_min_velocity = 0.001
     return Math.round(y + this.radius) >= canvas.height && Math.abs(dy) < cutoff_min_velocity
+  }
+
+  dragCoefficient(){
+    let mu = 18.6 * Math.pow(10,-6)
+    let Re = this.v_y * 2 * this.radius / mu
+    return 777 * ( (669806/876) + (114976/1155) * Re + (707/1380) * Re * Re) /  (646 * Re * ((32896/952) + (924/643) * Re + (1/385718) * Re * Re))
+  }
+
+  dragForce(cd = dragCoefficient()){
+    return 0.5 * 1.225 * Math.pow(this.v_y, 2) * cd;
   }
 }
