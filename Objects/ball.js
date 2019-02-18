@@ -1,4 +1,5 @@
 import { randomcolor } from './system.js'
+import { g, SCALE } from './system.js'
 
 export default class Ball{
     constructor(mass=1, radius=50, color = randomcolor(), e=0.9, v_x=0, v_y=0){
@@ -22,7 +23,8 @@ export default class Ball{
       ctx.fillStyle = this.color;
       ctx.beginPath();
       if(this.hasCollided(canvas,this.radius,x,y)){
-        drawCompressedBall(x, y, this.radius, canvas)   
+        let side = this.hasCollided(canvas,this.radius,x,y)
+        this.drawCompressedBall(side, x, y, this.radius, canvas)   
       }
       else{
         ctx.ellipse(x, y, this.radius, this.radius, 0, 0, 2 * Math.PI);
@@ -56,14 +58,14 @@ export default class Ball{
       this.dy = this.v_y;
       this.dx = this.v_x;
       this.g = 9.81;
-      this.a_y = this.g
+      this.a_y = g
       let cd = this.dragCoefficient(this.v_y)
       var count = 0
-      console.log('cd')
-      console.log(cd)
+    //   console.log('cd')
+    //   console.log(cd)
       let drag = this.dragForce(cd, this.v_y)
-      console.log('drag')
-      console.log(drag)
+    //   console.log('drag')
+    //   console.log(drag)
   
       setInterval(() => { 
         console.log(this.dy)
@@ -83,10 +85,12 @@ export default class Ball{
                 dy_elem.innerHTML = this.dy
           } 
           else{
-            this.a_y = this.g - drag/this.mass
+            this.a_y = g - drag/this.mass
+            let v_i = this.v_y
             this.v_y += this.a_y * this.dt
+            let dv = this.v_y - v_i
             //this.dy = this.v_y * this.dt
-            this.dy+= this.a_y * this.dt;
+            this.dy+= dv * this.dt / SCALE;
           }
     
           if(this.x >= canvas.width - this.radius || this.x < this.radius){
@@ -109,18 +113,41 @@ export default class Ball{
     }
 
     hasCollided(canvas,radius,x,y){
-        return y >= canvas.height - radius ||
-                 x >= canvas.width - radius ||
-                 y < radius ||
-                 x < radius
+        if(y >= canvas.height - radius)
+            return 'bottomy'
+        else if(x >= canvas.width - radius)
+            return 'rightx'
+        else if(y < radius)
+            return 'topy'
+        else if(x < radius)
+            return 'leftx'
+        else
+            return false
     }
 
-    drawCompressedBall(x, y, radius, canvas){
-        let ballTopY = y - radius
-        let newBallY = 0.5*(canvas.height - ballTopY)
-        let ellipseCentre = ballTopY + newBallY
-        let expansionX = radius - newBallY
-        ctx.ellipse(x, ellipseCentre, radius + expansionX, newBallY , 0, 0, 2 * Math.PI);
+    drawCompressedBall(side , x, y, radius, canvas){
+        if(side === 'bottomy'){
+            let ballTopY = y - radius
+            let newBallY = 0.5*(canvas.height - ballTopY)
+            let ellipseCentre = ballTopY + newBallY
+            let expansionX = radius - newBallY
+            let ctx = canvas.getContext("2d", { alpha: false })
+            ctx.ellipse(x, ellipseCentre, radius + expansionX, newBallY , 0, 0, 2 * Math.PI);
+        }
+        if(side === 'rightx'){
+            let ballLeftX = x - radius
+            let newBallX = 0.5*(canvas.width - ballLeftX)
+            let ellipseCentre = ballLeftX + newBallX
+            let expansionY = radius - newBallX
+            let ctx = canvas.getContext("2d", { alpha: false })
+            ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
+        }
+        if(side === 'topy'){
+
+        }
+        if(side === 'leftx'){
+
+        }
     }
 
   }
