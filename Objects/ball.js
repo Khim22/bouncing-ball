@@ -2,7 +2,9 @@ import { randomcolor } from './system.js'
 import { g, SCALE } from './system.js'
 
 export default class Ball{
-    constructor(mass=1, radius=50, color = randomcolor(), e=0.9, v_x=0, v_y=0){
+    constructor(mass=1, radius=50, color = randomcolor(), x=50, y=50, e=0.9, v_x=0, v_y=0, gravity=true){
+      this.x = x
+      this.y = y
       this.mass = mass;
       this.radius = radius;
       this.color = color
@@ -12,12 +14,15 @@ export default class Ball{
       this.v_y = v_y
       this.v_x = 1
       this.dt = 0.01
+      this.gravity = gravity
+      this.g = 9.81
 
     }
   
     drawBall(canvas,x=50, y=50){
       console.log('x: ' + x)
       console.log('y: ' + y)
+      console.log(this.x)
       let ctx = canvas.getContext("2d", { alpha: false });
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = this.color;
@@ -53,44 +58,40 @@ export default class Ball{
     }
   
     freeFall(canvas){
-      this.x = 50;
-      this.y = 50;
+      // this.x = 50;
+      // this.y = 50;
+
       this.dy = this.v_y;
       this.dx = this.v_x;
-      this.g = 9.81;
+      // this.g = 9.81;
       this.a_y = g
       let cd = this.dragCoefficient(this.v_y)
       var count = 0
-    //   console.log('cd')
-    //   console.log(cd)
       let drag = this.dragForce(cd, this.v_y)
-    //   console.log('drag')
-    //   console.log(drag)
   
       setInterval(() => { 
-        console.log(this.dy)
+        
         if(!this.isStoppedBouncing(this.dy, this.y, canvas)){
-          if(this.y >= canvas.height - this.radius || this.y < this.radius){
+          if(this.hasCollided(canvas, this.radius, this.x, this.y)){
+            console.log(this.hasCollided(canvas, this.radius, this.x, this.y))
               let gap = -this.dy * this.e + canvas.height
               if(Math.round(gap) <= canvas.height)
                 this.dy = -this.dy * this.e;
-              count++
-              console.log('bounce:' + count)
-              let bounce = document.getElementById("bounce")
-              bounce.innerHTML = count
-  
-                let y_elem = document.getElementById("y")
-                y_elem.innerHTML = this.y
-                let dy_elem = document.getElementById("dy")
-                dy_elem.innerHTML = this.dy
           } 
           else{
+            
+            let netforce = this.mass*g - drag
+            let b = this.updateState(this.x, this.y, this.v_x, this.v_y, netforce)
             this.a_y = g - drag/this.mass
-            let v_i = this.v_y
+            let dv = this.a_y * this.dt
             this.v_y += this.a_y * this.dt
-            let dv = this.v_y - v_i
-            //this.dy = this.v_y * this.dt
             this.dy+= dv * this.dt / SCALE;
+            //var {x,e,r,t,y,u} = this.updateState(this.x, this.y, this.v_x, this.v_y, netforce)
+            // let b = this.updateState(this.x, this.y, this.v_x, this.v_y, netforce)
+
+            console.log('wedew.v_y')
+            console.log(b)
+
           }
     
           if(this.x >= canvas.width - this.radius || this.x < this.radius){
@@ -102,12 +103,11 @@ export default class Ball{
           this.v_y = this.dy * 0.2
           console.log('dy : ' +  this.dy)
           console.log('dx : ' +  this.dx)
-          console.log('cd: ' + cd)
           this.drawBall(canvas, this.x , this.y);
-        }
-        else{
-          console.log('dy : ' +  this.dy)
-          console.log('bounce stopped:' + count)
+
+          count++
+          this.status(count)
+
         }
       }, 10);
     }
@@ -148,6 +148,35 @@ export default class Ball{
         if(side === 'leftx'){
 
         }
+    }
+
+    updateState(x, y, v_x, v_y, force){
+      let a_y = force/this.mass
+      let dv = a_y * this.dt
+      let a_x = 0
+      v_y += a_y * this.dt
+      this.dy+= dv * this.dt / SCALE;
+      return {
+        x : x,
+        y : y+= this.dy,
+        v_x : v_x,
+        v_y : v_y,
+        a_x : a_x,
+        a_y : a_y,
+      }
+
+
+    }
+
+    status(count){
+      console.log('bounce:' + count)
+      let bounce = document.getElementById("bounce")
+      bounce.innerHTML = count
+
+      let y_elem = document.getElementById("y")
+      y_elem.innerHTML = this.y
+      let dy_elem = document.getElementById("dy")
+      dy_elem.innerHTML = this.dy
     }
 
   }
