@@ -9,4 +9,35 @@ export const randomcolor = () => {
 export const g = 9.81
 export const SCALE = 0.01
 
+export default class System{
+    constructor(){
+        this.balls = []
+    }
+
+    addBall(ball){
+        this.balls.push(ball)
+    }
+
+    draw(canvas){
+        let ctx = canvas.getContext("2d", { alpha: false });
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.balls.forEach(ball => {
+            ball.drawBall(canvas)
+        });
+    }
+
+    fall(canvas){
+        
+        setInterval(()=>{
+            let ctx = canvas.getContext("2d", { alpha: false });
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            this.balls.forEach(ball => {
+                ball.freeFall(canvas)
+            });
+        },10)
+
+    }
+
+}
+
 

@@ -16,15 +16,16 @@ export default class Ball{
       this.dt = 0.01
       this.gravity = gravity
       this.g = 9.81
+      this.dy = 0;
+      this.dx = 1;
 
     }
   
     drawBall(canvas,x=50, y=50){
-      console.log('x: ' + x)
-      console.log('y: ' + y)
-      console.log(this.x)
       let ctx = canvas.getContext("2d", { alpha: false });
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // ctx.clearRect(0, 0, canvas.width, canvas.height);
+
       ctx.fillStyle = this.color;
       ctx.beginPath();
       if(this.hasCollided(canvas,this.radius,x,y)){
@@ -38,6 +39,7 @@ export default class Ball{
       ctx.fill();
       ctx.closePath();
     }
+
   
     isStoppedBouncing(dy,y, canvas){
       let cutoff_min_velocity = 0.001
@@ -58,75 +60,62 @@ export default class Ball{
     }
   
     freeFall(canvas){
-      // this.x = 50;
-      // this.y = 50;
 
-      this.dy = this.v_y;
-      this.dx = this.v_x;
-      // this.g = 9.81;
-      this.a_y = g
+      // setInterval(() => { 
+
       let cd = this.dragCoefficient(this.v_y)
       var count = 0
-      let drag = this.dragForce(cd, this.v_y)
-  
-      setInterval(() => { 
-        
-        if(!this.isStoppedBouncing(this.dy, this.y, canvas)){
-          if(this.hasCollided(canvas, this.radius, this.x, this.y)){
-            console.log(this.hasCollided(canvas, this.radius, this.x, this.y))
-              let gap = -this.dy * this.e + canvas.height
-              if(Math.round(gap) <= canvas.height)
-                this.dy = -this.dy * this.e;
+      let drag = this.dragForce(cd, this.v_y) 
+        let netforce = 0
+        if(!this.isStoppedBouncing(this.v_x, this.y, canvas)){
+          let collision = this.hasCollided(canvas, this.radius, this.x, this.y)
+          if(collision){
+            this.switchDirection(collision, canvas)
           } 
           else{
-            
-            let netforce = this.mass*g - drag
-            let b = this.updateState(this.x, this.y, this.v_x, this.v_y, netforce)
-            this.a_y = g - drag/this.mass
-            let dv = this.a_y * this.dt
-            this.v_y += this.a_y * this.dt
-            this.dy+= dv * this.dt / SCALE;
-            //var {x,e,r,t,y,u} = this.updateState(this.x, this.y, this.v_x, this.v_y, netforce)
-            // let b = this.updateState(this.x, this.y, this.v_x, this.v_y, netforce)
-
-            console.log('wedew.v_y')
-            console.log(b)
-
+            netforce = this.mass*g - drag
+            console.log(`netforce:${netforce}`)  
           }
-    
-          if(this.x >= canvas.width - this.radius || this.x < this.radius){
-            this.dx = -this.dx * this.e;
-          }
-    
-          this.y += this.dy;
-          this.x += this.dx
-          this.v_y = this.dy * 0.2
-          console.log('dy : ' +  this.dy)
-          console.log('dx : ' +  this.dx)
+          let b = this.updateState(0, netforce)
+
           this.drawBall(canvas, this.x , this.y);
-
-          count++
-          this.status(count)
+          this.status(collision)
 
         }
-      }, 10);
+      // }, 10);
     }
 
     hasCollided(canvas,radius,x,y){
+        let collisionside = ''
         if(y >= canvas.height - radius)
-            return 'bottomy'
-        else if(x >= canvas.width - radius)
-            return 'rightx'
-        else if(y < radius)
-            return 'topy'
-        else if(x < radius)
-            return 'leftx'
-        else
-            return false
+          collisionside += 'bottomy:'
+        if(x >= canvas.width - radius)
+          collisionside += 'rightx:'
+        if(y < radius)
+          collisionside +='topy:'
+        if(x < radius)
+          collisionside +='leftx:'
+        return collisionside
+    }
+
+    switchDirection(collision, canvas){
+      if(collision.includes('bottomy')){
+        let gap = -this.dy * this.e + canvas.height
+        if(Math.round(gap) <= canvas.height)
+          this.dy = -this.dy * this.e;
+      }
+      if(collision.includes('rightx')){
+        let gap = -this.dx * this.e + canvas.width
+        if(Math.round(gap) <= canvas.width)
+          this.dx = -this.dx * this.e;
+      }
+      if(collision.includes('leftx')){
+        this.dx = -this.dx * this.e;
+      }
     }
 
     drawCompressedBall(side , x, y, radius, canvas){
-        if(side === 'bottomy'){
+        if(side.includes('bottomy')){
             let ballTopY = y - radius
             let newBallY = 0.5*(canvas.height - ballTopY)
             let ellipseCentre = ballTopY + newBallY
@@ -134,7 +123,7 @@ export default class Ball{
             let ctx = canvas.getContext("2d", { alpha: false })
             ctx.ellipse(x, ellipseCentre, radius + expansionX, newBallY , 0, 0, 2 * Math.PI);
         }
-        if(side === 'rightx'){
+        if(side.includes('rightx')){
             let ballLeftX = x - radius
             let newBallX = 0.5*(canvas.width - ballLeftX)
             let ellipseCentre = ballLeftX + newBallX
@@ -145,38 +134,55 @@ export default class Ball{
         if(side === 'topy'){
 
         }
-        if(side === 'leftx'){
-
+        if(side.includes('leftx')){
+          let ballRightX = x + radius
+          let newBallX = 0.5*(ballRightX)
+          let ellipseCentre = newBallX
+          let expansionY = radius - newBallX
+          let ctx = canvas.getContext("2d", { alpha: false })
+          ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
         }
     }
 
-    updateState(x, y, v_x, v_y, force){
-      let a_y = force/this.mass
-      let dv = a_y * this.dt
-      let a_x = 0
-      v_y += a_y * this.dt
-      this.dy+= dv * this.dt / SCALE;
-      return {
-        x : x,
-        y : y+= this.dy,
-        v_x : v_x,
-        v_y : v_y,
-        a_x : a_x,
-        a_y : a_y,
+    updateState(force_x, force_y){
+      try{
+        let a_y = force_y/this.mass
+        let dv = a_y * this.dt
+        let a_x = 0
+        this.v_y += dv
+        this.dy+= dv * this.dt / SCALE;
+
+        this.y += this.dy;
+        this.x += this.dx
+        this.v_y = this.dy * 0.2
+
+        return true
       }
-
-
+      catch(err){
+        console.log(err)
+      }
+      return false
     }
 
-    status(count){
-      console.log('bounce:' + count)
-      let bounce = document.getElementById("bounce")
-      bounce.innerHTML = count
+    getState(){
+        return {
+          x : x,
+          y : y,
+          v_x : v_x,
+          v_y : v_y,
+          a_x : a_x,
+          a_y : a_y,
+      }
+    }
 
-      let y_elem = document.getElementById("y")
-      y_elem.innerHTML = this.y
-      let dy_elem = document.getElementById("dy")
-      dy_elem.innerHTML = this.dy
+    status(col){
+      let bounce = document.getElementById("bounce")
+      bounce.innerHTML = col
+
+      document.getElementById("y").innerHTML = `y: ${this.y}`      
+      document.getElementById("dy").innerHTML = `dy: ${this.dy}`
+      document.getElementById("x").innerHTML = `x: ${this.x}`
+      document.getElementById("dx").innerHTML = `dx: ${this.dx}`
     }
 
   }
