@@ -2,7 +2,7 @@ import { randomcolor } from './system.js'
 import { g, SCALE } from './system.js'
 
 export default class Ball{
-    constructor(mass=1, radius=50, color = randomcolor(), x=50, y=50, e=0.9, v_x=0, v_y=0, gravity=true){
+    constructor(mass=1, radius=50, color = randomcolor(), x=50, y=50, e=0.9, v_x=1, v_y=0, gravity=true){
       this.x = x
       this.y = y
       this.mass = mass;
@@ -12,20 +12,17 @@ export default class Ball{
       this.a_y = 0
       this.a_x = 0
       this.v_y = v_y
-      this.v_x = 1
+      this.v_x = v_x
       this.dt = 0.01
       this.gravity = gravity
       this.g = 9.81
       this.dy = 0;
-      this.dx = 1;
+      this.dx = v_x;
 
     }
   
     drawBall(canvas,x=50, y=50){
       let ctx = canvas.getContext("2d", { alpha: false });
-
-      // ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       ctx.fillStyle = this.color;
       ctx.beginPath();
       if(this.hasCollided(canvas,this.radius,x,y)){
@@ -61,20 +58,17 @@ export default class Ball{
   
     freeFall(canvas){
 
-      // setInterval(() => { 
-
       let cd = this.dragCoefficient(this.v_y)
-      var count = 0
       let drag = this.dragForce(cd, this.v_y) 
         let netforce = 0
         if(!this.isStoppedBouncing(this.v_x, this.y, canvas)){
           let collision = this.hasCollided(canvas, this.radius, this.x, this.y)
+          
           if(collision){
             this.switchDirection(collision, canvas)
           } 
           else{
             netforce = this.mass*g - drag
-            console.log(`netforce:${netforce}`)  
           }
           let b = this.updateState(0, netforce)
 
@@ -82,7 +76,6 @@ export default class Ball{
           this.status(collision)
 
         }
-      // }, 10);
     }
 
     hasCollided(canvas,radius,x,y){
@@ -110,7 +103,11 @@ export default class Ball{
           this.dx = -this.dx * this.e;
       }
       if(collision.includes('leftx')){
-        this.dx = -this.dx * this.e;
+        let gap = -this.dx * this.e
+        let ellipseCentre = 0.5*(this.x + this.radius)
+        if(Math.round(gap + ellipseCentre) >= this.radius)
+          this.dx = -this.dx * this.e;
+        
       }
     }
 
@@ -140,21 +137,25 @@ export default class Ball{
           let ellipseCentre = newBallX
           let expansionY = radius - newBallX
           let ctx = canvas.getContext("2d", { alpha: false })
+          console.log(`ctx.ellipse(${ellipseCentre}, ${y}, ${newBallX}, ${radius + expansionY} , 0, 0, 2 * Math.PI);`)
           ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
+          
         }
     }
 
     updateState(force_x, force_y){
       try{
         let a_y = force_y/this.mass
-        let dv = a_y * this.dt
+        let dvy = a_y * this.dt
         let a_x = 0
-        this.v_y += dv
-        this.dy+= dv * this.dt / SCALE;
-
+        let dvx = a_x * this.dt
+        this.v_y += dvy
+        this.dy+= dvy * this.dt / SCALE;
+        this.dx+= dvx * this.dt / SCALE;
         this.y += this.dy;
         this.x += this.dx
         this.v_y = this.dy * 0.2
+        this.v_x = this.dx * 0.2
 
         return true
       }
@@ -166,12 +167,12 @@ export default class Ball{
 
     getState(){
         return {
-          x : x,
-          y : y,
-          v_x : v_x,
-          v_y : v_y,
-          a_x : a_x,
-          a_y : a_y,
+          x : this.x,
+          y : this.y,
+          v_x : this.v_x,
+          v_y : this.v_y,
+          a_x : this.a_x,
+          a_y : this.a_y,
       }
     }
 

@@ -16,11 +16,11 @@ import System from './Objects/system.js'
 window.drawBall = (canvas, context) => {
   window.ball = new Ball(2, 50)
   // window.balls.push(window.ball)
+  // window.sys.addBall(
+  //   new Ball(1,20,'White', 80, 50, 0.9,50,0)
+  // )
   window.sys.addBall(
-    new Ball(1,20,'White', 80, 100, 0.6,2,0)
-  )
-  window.sys.addBall(
-    new Ball(3,50,'Red', 100, 50, 0.9,1,0)
+    new Ball(3,20,'Red', 80, 50, 0.9,50,0)
   )
 
   window.sys.draw(canvas, context)
