@@ -132,12 +132,11 @@ export default class Ball{
 
         }
         if(side.includes('leftx')){
-          let ballRightX = x + radius
+          let ballRightX = x + this.radius > 0 ? x + this.radius : -(x + this.radius)
           let newBallX = 0.5*(ballRightX)
           let ellipseCentre = newBallX
           let expansionY = radius - newBallX
           let ctx = canvas.getContext("2d", { alpha: false })
-          console.log(`ctx.ellipse(${ellipseCentre}, ${y}, ${newBallX}, ${radius + expansionY} , 0, 0, 2 * Math.PI);`)
           ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
           
         }
@@ -154,8 +153,6 @@ export default class Ball{
         this.dx+= dvx * this.dt / SCALE;
         this.y += this.dy;
         this.x += this.dx
-        this.v_y = this.dy * 0.2
-        this.v_x = this.dx * 0.2
 
         return true
       }

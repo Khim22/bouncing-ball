@@ -27,22 +27,15 @@ export default class System{
     }
 
     fall(canvas){
-        // var fall = (timestamp)=>{
-        //     let ctx = canvas.getContext("2d", { alpha: false });
-        //     ctx.clearRect(0, 0, canvas.width, canvas.height);
-        //     this.balls.forEach(ball => {
-        //         ball.freeFall(canvas)
-        //     });
-        //     requestAnimationFrame(fall)
-        // }
-        // requestAnimationFrame(fall)
-        setInterval(()=>{
+        var fall = (timestamp)=>{
             let ctx = canvas.getContext("2d", { alpha: false });
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             this.balls.forEach(ball => {
                 ball.freeFall(canvas)
             });
-        },10)
+            requestAnimationFrame(fall)
+        }
+        requestAnimationFrame(fall)
 
     }
 

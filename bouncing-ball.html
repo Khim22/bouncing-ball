@@ -9,13 +9,16 @@
     <link rel="stylesheet" type="text/css" href="./bouncing-ball.css" />
     <meta charset="utf-8" />
   </head>
-  <body>
-    <div><canvas id="bouncingball" width="200" height="500"></canvas></div>
+  <body  class="background_container">
+    <div>
+      <canvas id="bouncingball" width="1300" height="500"></canvas></div>
     <!-- <div>
         <input type="text" id="radius"/>
         <input type="text" id="e"/>
     </div> -->
-    <div>
+    <div style="display: flex;
+    flex-direction: row;
+    justify-content: center;">
       <button onclick="drawBall(bouncingball)">Create Ball</button>
       <button onclick="moveBall(bouncingball)">Move Ball</button>
     </div>
