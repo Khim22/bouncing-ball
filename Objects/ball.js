@@ -1,12 +1,18 @@
-import { randomcolor } from './system.js'
-import { g, SCALE } from './system.js'
+import { randomcolor, randomStartPosition } from './system.js'
+import { randomInt } from './system.js'
+import { g, SCALE, windowHeight, windowWidth } from './system.js'
 
 export default class Ball{
-    constructor(mass=1, radius=50, color = randomcolor(), x=50, y=50, e=0.9, v_x=1, v_y=0, gravity=true){
-      this.x = x
-      this.y = y
-      this.mass = mass;
+    constructor(mass=randomInt(1000), 
+                 radius=randomInt(Math.min(windowHeight, windowWidth)/4), 
+                 color = randomcolor(),
+                 x=randomStartPosition(randomInt(200),windowWidth),
+                 y=randomStartPosition(randomInt(200),windowHeight),
+                 e=Math.random(), v_x=randomInt(10), v_y=0, gravity=true){
       this.radius = radius;
+      this.x = randomStartPosition(this.radius,windowWidth)
+      this.y = randomStartPosition(this.radius,windowHeight)
+      this.mass = mass; 
       this.color = color
       this.e = e
       this.a_y = 0
@@ -18,23 +24,26 @@ export default class Ball{
       this.g = 9.81
       this.dy = 0;
       this.dx = v_x;
-
+      console.log(`radius:${this.radius}| startX: ${this.x} | startY: ${this.y} |  `)
     }
   
-    drawBall(canvas,x=50, y=50){
+    drawBall(canvas,x=this.x, y=this.y){
       let ctx = canvas.getContext("2d", { alpha: false });
       ctx.fillStyle = this.color;
       ctx.beginPath();
       if(this.hasCollided(canvas,this.radius,x,y)){
         let side = this.hasCollided(canvas,this.radius,x,y)
-        this.drawCompressedBall(side, x, y, this.radius, canvas)   
+        let isBallCompressed = this.drawCompressedBall(side, x, y, this.radius, canvas)
+        if(!isBallCompressed)
+          return false
       }
       else{
-        ctx.ellipse(x, y, this.radius, this.radius, 0, 0, 2 * Math.PI);
+        ctx.ellipse(this.x, this.y, this.radius, this.radius, 0, 0, 2 * Math.PI);
       }
-      ctx.stroke();
+      // ctx.stroke();
       ctx.fill();
       ctx.closePath();
+      return true
     }
 
   
@@ -71,7 +80,6 @@ export default class Ball{
             netforce = this.mass*g - drag
           }
           let b = this.updateState(0, netforce)
-
           this.drawBall(canvas, this.x , this.y);
           this.status(collision)
 
@@ -112,21 +120,33 @@ export default class Ball{
     }
 
     drawCompressedBall(side , x, y, radius, canvas){
+      let ctx = canvas.getContext("2d", { alpha: false })
+      let newX, newY, newXLength, newYLength = 0;
         if(side.includes('bottomy')){
             let ballTopY = y - radius
             let newBallY = 0.5*(canvas.height - ballTopY)
             let ellipseCentre = ballTopY + newBallY
             let expansionX = radius - newBallY
-            let ctx = canvas.getContext("2d", { alpha: false })
-            ctx.ellipse(x, ellipseCentre, radius + expansionX, newBallY , 0, 0, 2 * Math.PI);
+
+            newX = x
+            newY = ellipseCentre
+            newXLength = radius + expansionX
+            newYLength = newBallY
+            // console.log(`Bottom: ctx.ellipse(${x}, ${ellipseCentre}, ${radius + expansionX}, ${newBallY} , 0, 0, 2 * Math.PI)`)
+            // ctx.ellipse(x, ellipseCentre, radius + expansionX, newBallY , 0, 0, 2 * Math.PI);
         }
         if(side.includes('rightx')){
             let ballLeftX = x - radius
             let newBallX = 0.5*(canvas.width - ballLeftX)
             let ellipseCentre = ballLeftX + newBallX
             let expansionY = radius - newBallX
-            let ctx = canvas.getContext("2d", { alpha: false })
-            ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
+            
+            newX = ellipseCentre
+            newY = y
+            newXLength = newBallX
+            newYLength = radius + expansionY
+            console.log(`Right:ctx.ellipse(${ellipseCentre}, ${y}, ${newBallX}, ${radius + expansionY} , 0, 0, 2 * Math.PI)`)
+            // ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
         }
         if(side === 'topy'){
 
@@ -136,10 +156,23 @@ export default class Ball{
           let newBallX = 0.5*(ballRightX)
           let ellipseCentre = newBallX
           let expansionY = radius - newBallX
-          let ctx = canvas.getContext("2d", { alpha: false })
-          ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
+          
+          newX = ellipseCentre
+          newY = y
+          newXLength = newBallX
+          newYLength = radius + expansionY
+          console.log(`Left: ctx.ellipse(${ellipseCentre}, ${y}, ${newBallX}, ${radius + expansionY} , 0, 0, 2 * Math.PI)`)
+          // ctx.ellipse(ellipseCentre, y, newBallX, radius + expansionY , 0, 0, 2 * Math.PI);
           
         }
+        if(newXLength > 0 && newYLength > 0){
+          ctx.ellipse(newX, newY, newXLength, newYLength , 0, 0, 2 * Math.PI);
+          return true
+        }
+        else{
+          return false
+        }
+        
     }
 
     updateState(force_x, force_y){

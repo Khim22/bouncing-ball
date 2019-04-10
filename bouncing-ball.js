@@ -5,7 +5,6 @@ import System from './Objects/system.js'
   var init = () => {
     //scale- 1px : 1cm
     var canvas = window.bouncingball;
-    console.log(canvas)
     window.context = canvas.getContext("2d", { alpha: false });
   };
   window.onload = init;
@@ -14,20 +13,21 @@ import System from './Objects/system.js'
 })(window, document);
 
 window.drawBall = (canvas, context) => {
-  window.ball = new Ball(2, 50)
-  // window.balls.push(window.ball)
-  // window.sys.addBall(
-  //   new Ball(1,20,'White', 80, 50, 0.9,50,0)
-  // )
+  // window.ball = new Ball(2, 50)
   window.sys.addBall(
-    new Ball(3,20,'Red', 80, 50, 0.9,50,0)
+    new Ball()
   )
+  // window.sys.createRandomBall();
 
   window.sys.draw(canvas, context)
   //ball.drawBall(canvas, context);
 }; 
 
 window.moveBall = (canvas) => {
+  let btn = document.getElementById('moveBall')
+  btn.disabled = true
+  btn.style.background = '#303030'
+
   window.sys.fall(canvas)
-  window.ball.freeFall(canvas)
+  //window.ball.freeFall(canvas)
 };
